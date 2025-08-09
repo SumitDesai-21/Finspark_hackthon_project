@@ -5,8 +5,9 @@ import hashlib
 import datetime
 from typing import Dict, List, Optional, Tuple
 import uuid
-import requests  # NEW import for Rasa API
-
+import requests
+# import tts  # Removed because the 'tts' module could not be resolved
+import TextToSpeech as ttss
 # Page configuration
 st.set_page_config(
     page_title="SecureBank ChatBot",
@@ -130,11 +131,33 @@ def authenticate_demo_account():
                 if key in st.session_state: del st.session_state[key]
             st.rerun()
 
-# NEW: Rasa API call
+# Check Rasa server status
+def check_rasa_server() -> bool:
+    """Check if Rasa server is running."""
+    try:
+        response = requests.get("http://localhost:5005/version", timeout=5)
+        return response.status_code == 200
+    except:
+        return False
+
+# NEW: Rasa API call with improved error handling
 def send_to_rasa(user_message: str, language: str = "English") -> List[str]:
     """Send the message to Rasa REST API and return list of bot replies."""
     session_id = st.session_state.get('session_id', generate_session_id())
     st.session_state.session_id = session_id
+    
+    # Check if server is running first
+    if not check_rasa_server():
+        return [
+            "🔧 **Rasa Server Not Running**\n\n"
+            "The chatbot backend is currently unavailable. To start the Rasa server:\n\n"
+            "1. Open a new terminal\n"
+            "2. Navigate to the project directory\n"
+            "3. Run: `rasa run --enable-api --cors \"*\" --port 5005`\n"
+            "4. In another terminal, run: `rasa run actions --port 5055`\n\n"
+            "**Demo Response:** Thank you for your message! I'm a banking assistant ready to help with account inquiries, transfers, and general banking services."
+        ]
+    
     try:
         # Get language code
         language_code = get_language_code(language)
@@ -150,17 +173,22 @@ def send_to_rasa(user_message: str, language: str = "English") -> List[str]:
         }
         
         resp = requests.post(
-            "http://0.0.0.0:5005/webhooks/rest/webhook",
+            "http://localhost:5005/webhooks/rest/webhook",
             json=payload, timeout=10
         )
+
         if resp.status_code == 200:
             data = resp.json()
             replies = [m.get("text", "") for m in data if m.get("text")]
-            return replies
+            return replies if replies else ["I received your message but couldn't generate a response."]
         else:
-            return ["❌ Error: Unable to connect to Rasa server."]
+            return [f"❌ Server Error: Received status code {resp.status_code}"]
     except requests.RequestException as e:
-        return [f"❌ Connection error: {e}"]
+        return [
+            f"❌ **Connection Error**\n\n"
+            f"Could not connect to Rasa server: {str(e)}\n\n"
+            f"Please ensure the Rasa server is running on port 5005."
+        ]
 
 def send_message():
     """Send message and get response from Rasa."""
@@ -175,7 +203,6 @@ def send_message():
     # Get selected language (default to English if not set)
     selected_language = st.session_state.get('selected_language', get_default_language())
     
-    # Add user message
     st.session_state.messages.append({
         'content': user_message,
         'timestamp': datetime.datetime.now().strftime('%I:%M %p'),
@@ -185,14 +212,30 @@ def send_message():
     # Get Rasa responses with language information
     replies = send_to_rasa(user_message, selected_language)
     for reply in replies:
+
         st.session_state.messages.append({
             'content': reply,
             'timestamp': datetime.datetime.now().strftime('%I:%M %p'),
             'is_user': False
         })
-    
+    print(replies)
+    ttss.some(str(replies))
+    # tts.some(replies)  # Removed because the 'tts' module could not be resolved
     # Clear the text field by setting user_input to empty string
-    st.session_state.user_input = ""
+    def send_message():
+        # your send message logic here
+        # ...
+        st.session_state.user_input = ""  # REMOVE THIS LINE
+
+        def clear_input():
+            st.session_state.user_input = ""
+
+        st.text_input(
+            "Message",
+            key="user_input",
+            on_change=send_message  # This will call send_message when user presses Enter
+        )
+
 
 def handle_language_change(new_language: str):
     """Handle language change and update welcome message if needed."""
@@ -242,6 +285,22 @@ def main():
     # Sidebar authentication and language selection
     authenticate_demo_account()
     
+    # Server status indicator
+    st.sidebar.markdown("### 🔌 Server Status")
+    if check_rasa_server():
+        st.sidebar.success("✅ Rasa Server: Connected")
+    else:
+        st.sidebar.error("❌ Rasa Server: Disconnected")
+        with st.sidebar.expander("Start Rasa Server", expanded=False):
+            st.markdown("""
+            **To start the Rasa server:**
+            1. Open terminal in project directory
+            2. Run: `rasa run --enable-api --cors "*" --port 5005`
+            3. In another terminal: `rasa run actions --port 5055`
+            """)
+            if st.button("🔄 Refresh Status"):
+                st.rerun()
+    
     # Language selection in sidebar
     st.sidebar.markdown("### 🌐 Language Selection")
     language_options = list(LANGUAGES.keys())
@@ -265,7 +324,7 @@ def main():
             render_message(m, m['is_user'])
 
     # Input field with language indicator and send button
-    st.markdown(f"<div class='language-selector'><strong>🌐 Current Language:</strong> {get_language_flag(st.session_state.selected_language)} {st.session_state.selected_language}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='language-selector' style='color:black'><strong>🌐 Current Language:</strong> {get_language_flag(st.session_state.selected_language)} {st.session_state.selected_language}</div>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([5, 1, 1])
     with col1:
@@ -293,8 +352,44 @@ def main():
     """, unsafe_allow_html=True)
 
     # Footer
-    st.markdown("---")
-    st.markdown('<div style="text-align: center; color: #666; font-size: 0.9em;">🏦 SecureBank Digital Assistant | Secure • Reliable • Available 24/7</div>', unsafe_allow_html=True)
+    # st.markdown("---")
+    # st.markdown('<div style="text-align: center; color: #666; font-size: 0.9em;">🏦 SecureBank Digital Assistant | Secure • Reliable • Available 24/7</div>', unsafe_allow_html=True)
+
+    # Footer
+    st.markdown("""
+    <style>
+    .footer {
+        position: relative;
+        bottom: 0;
+        width: 100%;
+        background-color: #004d99;  /* Bank blue */
+        color: white;
+        text-align: center;
+        padding: 15px 0;
+        font-size: 0.9em;
+        border-radius: 8px 8px 0 0;
+    }
+    .footer a {
+        color: #ffcc00;
+        text-decoration: none;
+        margin: 0 10px;
+    }
+    .footer a:hover {
+        text-decoration: underline;
+    }
+    </style>
+
+    <div class="footer">
+        <p>🏦 <strong>SecureBank Digital Assistant</strong> — Secure • Reliable • Available 24/7</p>
+        <p>
+            <a href="#">Terms of Service</a> | 
+            <a href="#">Privacy Policy</a> | 
+            <a href="#">Contact Us</a>
+        </p>
+        <p style="font-size:0.8em;">© 2025 BankOfMaharashtra. All Rights Reserved.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
