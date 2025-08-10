@@ -1,0 +1,145 @@
+version: "3.1"
+nlu:
+  - intent: greet
+    examples: |
+      - Hello
+      - Hi
+      - Hey
+      - Greetings
+      - Good day
+      - Good morning
+      - नमस्ते
+      - नमस्कार
+      - హలో
+      - హాయ్
+
+  - intent: set_language
+    examples: |
+      - I want to use English
+      - Set language to Hindi
+      - मैं हिंदी चाहता हूं
+      - मला मराठी हवी
+      - [English](language)
+      - [Hindi](language)
+      - [मराठी](language)
+      - [తెలుగు](language)
+
+  - intent: goodbye
+    examples: |
+      - Goodbye
+      - Bye
+      - See you later
+      - अलविदा
+      - फिर मिलेंगे
+      - पुन्हा भेटू
+      - వీడ్కోలు
+
+  - intent: affirm
+    examples: |
+      - Yes
+      - Yeah
+      - Correct
+      - हाँ
+      - हो
+      - అవును
+
+  - intent: deny
+    examples: |
+      - No
+      - Nope
+      - Not correct
+      - नहीं
+      - नाही
+      - కాదు
+
+  - intent: mood_happy
+    examples: |
+      - I am happy
+      - I'm feeling great
+      - Awesome
+      - मैं खुश हूँ
+      - छान वाटतंय
+      - నేను సంతోషంగా ఉన్నాను
+
+  - intent: mood_unhappy
+    examples: |
+      - I am sad
+      - I feel bad
+      - Not good
+      - दुःखी हूँ
+      - वाईट वाटतंय
+      - బాధగా ఉంది
+
+  - intent: bot_challenge
+    examples: |
+      - Are you a bot?
+      - Are you a human?
+      - What are you?
+      - आप बॉट हैं?
+      - तू बॉट आहेस का?
+      - నువ్వు బాట్‌వా?
+
+  - intent: ask_what_can_do
+    examples: |
+      - What can you do?
+      - How can you help me?
+      - आप क्या कर सकते हैं?
+      - तू काय करू शकतोस?
+      - నువ్వు ఏమి చేయగలవు?
+
+  - intent: ask_account_opening
+    examples: |
+      - How to open a savings account?
+      - What documents are needed for account opening?
+      - I want to open a new account
+      - बचत खाता कैसे खोलें?
+      - खाते कसे उघडावे?
+      - బ్యాంక్ ఖాతా ఎలా తెరవాలి?
+
+  - intent: ask_balance_enquiry
+    examples: |
+      - How to check account balance?
+      - What is my account balance?
+      - मेरा बैंक बैलेंस कितना है?
+      - माझे खाते बैलन्स काय आहे?
+      - నా బ్యాంక్ బ్యాలెన్స్ ఎంత?
+
+  - intent: ask_atm_services
+    examples: |
+      - How to get an ATM card?
+      - My ATM card is blocked
+      - एटीएम कार्ड कैसे बनवाएं?
+      - एटीएम कार्ड ब्लॉक झाले आहे
+      - ATM కార్డ్ ఎలా తీసుకోవాలి?
+
+  - intent: ask_internet_banking
+    examples: |
+      - How to register for internet banking?
+      - How to reset my net banking password?
+      - नेट बैंकिंग कैसे शुरू करें?
+      - नेट बँकिंग कसे सुरू करावे?
+      - నెట్ బ్యాంకింగ్ ఎలా మొదలు పెట్టాలి?
+
+  - intent: ask_loan_services
+    examples: |
+      - What is the home loan interest rate?
+      - How to apply for a personal loan?
+      - होम लोन की ब्याज दर क्या है?
+      - होम लोनचा व्याज दर काय?
+      - హోమ్ లోన్ వడ్డీ రేటు ఎంత?
+
+  - intent: ask_credit_card
+    examples: |
+      - How to apply for a credit card?
+      - What are the benefits of a credit card?
+      - क्रेडिट कार्ड कैसे बनवाएं?
+      - क्रेडिट कार्ड कसे बनवावे?
+      - క్రెడిట్ కార్డ్ ఎలా తీసుకోవాలి?
+
+  - intent: ask_customer_care
+    examples: |
+      - What is the customer care number?
+      - How can I contact the bank?
+      - बैंक का कस्टमर केयर नंबर क्या है?
+      - बँकचा कस्टमर केअर नंबर काय?
+      - బ్యాంక్ కస్టమర్ కేర్ నంబర్ ఏమిటి?
