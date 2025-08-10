@@ -131,33 +131,11 @@ def authenticate_demo_account():
                 if key in st.session_state: del st.session_state[key]
             st.rerun()
 
-# Check Rasa server status
-def check_rasa_server() -> bool:
-    """Check if Rasa server is running."""
-    try:
-        response = requests.get("http://localhost:5005/version", timeout=5)
-        return response.status_code == 200
-    except:
-        return False
-
-# NEW: Rasa API call with improved error handling
+# NEW: Rasa API call
 def send_to_rasa(user_message: str, language: str = "English") -> List[str]:
     """Send the message to Rasa REST API and return list of bot replies."""
     session_id = st.session_state.get('session_id', generate_session_id())
     st.session_state.session_id = session_id
-    
-    # Check if server is running first
-    if not check_rasa_server():
-        return [
-            "🔧 **Rasa Server Not Running**\n\n"
-            "The chatbot backend is currently unavailable. To start the Rasa server:\n\n"
-            "1. Open a new terminal\n"
-            "2. Navigate to the project directory\n"
-            "3. Run: `rasa run --enable-api --cors \"*\" --port 5005`\n"
-            "4. In another terminal, run: `rasa run actions --port 5055`\n\n"
-            "**Demo Response:** Thank you for your message! I'm a banking assistant ready to help with account inquiries, transfers, and general banking services."
-        ]
-    
     try:
         # Get language code
         language_code = get_language_code(language)
@@ -173,22 +151,17 @@ def send_to_rasa(user_message: str, language: str = "English") -> List[str]:
         }
         
         resp = requests.post(
-            "http://localhost:5005/webhooks/rest/webhook",
+            "http://0.0.0.0:5005/webhooks/rest/webhook",
             json=payload, timeout=10
         )
-
         if resp.status_code == 200:
             data = resp.json()
             replies = [m.get("text", "") for m in data if m.get("text")]
-            return replies if replies else ["I received your message but couldn't generate a response."]
+            return replies
         else:
-            return [f"❌ Server Error: Received status code {resp.status_code}"]
+            return ["❌ Error: Unable to connect to Rasa server."]
     except requests.RequestException as e:
-        return [
-            f"❌ **Connection Error**\n\n"
-            f"Could not connect to Rasa server: {str(e)}\n\n"
-            f"Please ensure the Rasa server is running on port 5005."
-        ]
+        return [f"❌ Connection error: {e}"]
 
 def send_message():
     """Send message and get response from Rasa."""
@@ -210,6 +183,7 @@ def send_message():
     })
     
     # Get Rasa responses with language information
+    replies = send_to_rasa(user_message, selected_language)
     replies = send_to_rasa(user_message, selected_language)
     for reply in replies:
 
@@ -284,22 +258,6 @@ def main():
 
     # Sidebar authentication and language selection
     authenticate_demo_account()
-    
-    # Server status indicator
-    st.sidebar.markdown("### 🔌 Server Status")
-    if check_rasa_server():
-        st.sidebar.success("✅ Rasa Server: Connected")
-    else:
-        st.sidebar.error("❌ Rasa Server: Disconnected")
-        with st.sidebar.expander("Start Rasa Server", expanded=False):
-            st.markdown("""
-            **To start the Rasa server:**
-            1. Open terminal in project directory
-            2. Run: `rasa run --enable-api --cors "*" --port 5005`
-            3. In another terminal: `rasa run actions --port 5055`
-            """)
-            if st.button("🔄 Refresh Status"):
-                st.rerun()
     
     # Language selection in sidebar
     st.sidebar.markdown("### 🌐 Language Selection")

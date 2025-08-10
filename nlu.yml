@@ -104,6 +104,13 @@ nlu:
       - माझे खाते बैलन्स काय आहे?
       - నా బ్యాంక్ బ్యాలెన్స్ ఎంత?
 
+  - intent: session_start
+    examples: |
+      - .
+      - 
+      - start
+      - begin
+
   - intent: ask_atm_services
     examples: |
       - How to get an ATM card?
